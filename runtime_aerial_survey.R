@@ -1,4 +1,5 @@
-pkgs <- c("tidyverse", "future", "furrr", "lubridate", "sf", "glue", "exifr", 'geosphere', "mapboxer")
+pkgs <- c("tidyverse", "future", "furrr", "lubridate", "sf", "glue",
+          "exifr", 'geosphere', "mapboxer")
 sapply(pkgs, require, character = T)
 
 # Assign number of cores to be used in parallel jobs
@@ -12,8 +13,6 @@ setwd("D:/2024_HarborSeal_Aerial_Survey/")
 md <- read.csv('./metaData/July15_SMI_Rosa_ANA_photolog.csv')
 
 # Visual check of track log
-# spdf <- st_as_sf(md, coords = c("Longitude", "Latitude"))
-#
 # md %>%
 #   as_mapbox_source(lng = "Longitude", lat = "Latitude") %>%
 #   # Setup a map with the default source above
@@ -82,6 +81,26 @@ dfo <- dfo %>%
 
 # Save image set metadata file
 write.csv(dfo, './metaData/July15_SMI_metadata.csv', row.names = F)
+
+# Visual check of image log
+dfo %>%
+  mutate(
+    color = factor(breakId, labels = RColorBrewer::brewer.pal(length(unique(breakId)), "YlOrRd"))
+  ) %>%
+  as_mapbox_source(lng = "longitude", lat = "latitude") %>%
+  # Setup a map with the default source above
+  mapboxer(
+    center = c(md$Longitude[1], md$Latitude[1]),
+    zoom = 10
+  ) %>%
+  # Add a navigation control
+  add_navigation_control() %>%
+  # Add a layer styling the data of the default source
+  add_circle_layer(
+    circle_color = c("get", "color"),
+    circle_radius = 3,
+    popup = "Break ID: {{breakId}} <br> {{SourceFile}}"
+  )
 
 
 #

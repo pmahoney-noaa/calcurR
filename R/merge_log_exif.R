@@ -27,7 +27,7 @@ merge_log_exif <- function(md, exif) {
   }
 
   mdo <- mdo %>%
-    inner_join(exif, by = "frame_count") %>%
+    dplyr::inner_join(exif, by = "frame_count") %>%
     mutate(
       # Ideally, this would be the variable utc_time, but problematic for some files
       capture_date = mdy_hms(paste(date.y, UTC.time)), #ymd_hms(utc_time),

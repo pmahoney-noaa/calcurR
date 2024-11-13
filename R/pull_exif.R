@@ -8,7 +8,7 @@
 #' @examples
 
 pull_exif <- function(images) {
-  furrr::future_map_dfr(images, read_exif) %>%
+  furrr::future_map_dfr(images, exifr::read_exif) %>%
     extract(FileName, "frame_count") %>%
     mutate(
       frame_count = as.numeric(gsub("DSC", "", frame_count)),
