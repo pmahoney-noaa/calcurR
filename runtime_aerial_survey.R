@@ -146,19 +146,37 @@ df %>%
 #
 ## Move files into groups based on batches/bursts
 #
+
+## Option 1: By break
+# idir2 <- gsub("^./", "", idir)
+# destNames <- paste0("./toMosaic/", idir2, "Break_", breakIds)
+# lapply(destNames, function (x) dir.create(x, recursive = T))
+#
+# dfm <- dfo %>%
+#   mutate(
+#     DestFile = paste0("./toMosaic/", idir2, "Break_", breakId, "/")
+#   )
+#
+# furrr::future_pmap(dfm %>%
+#                      mutate(recursive = T, copy.date = T) %>%
+#                      dplyr::select(from = SourceFile, to = DestFile, recursive, copy.date),
+#                    file.copy)
+
+## Option 2: By section
 idir2 <- gsub("^./", "", idir)
-destNames <- paste0("./toMosaic/", idir2, "Break_", breakIds)
+destNames <- paste0("./toMosaic/", idir2, unique(df$section))
 lapply(destNames, function (x) dir.create(x, recursive = T))
 
-dfm <- dfo %>%
+dfm <- df %>%
   mutate(
-    DestFile = paste0("./toMosaic/", idir2, "Break_", breakId, "/")
+    DestFile = paste0("./toMosaic/", idir2, section, "/")
   )
 
 furrr::future_pmap(dfm %>%
                      mutate(recursive = T, copy.date = T) %>%
                      dplyr::select(from = SourceFile, to = DestFile, recursive, copy.date),
                    file.copy)
+
 
 
 
