@@ -1,5 +1,5 @@
 pkgs <- c("tidyverse", "future", "furrr", "lubridate", "sf", "glue",
-          "exifr", 'geosphere', "mapboxer")
+          "exifr", 'geosphere', "mapboxer", "calcurR")
 sapply(pkgs, require, character = T)
 
 # Assign number of cores to be used in parallel jobs
@@ -79,11 +79,29 @@ dfo <- dfo %>%
     breakId = rep(breakIds, c(breakCount))
   )
 
-# Save image set metadata file
-write.csv(dfo, './metaData/July15_SMI_metadata.csv', row.names = F)
+#
+## Image sets by region (will duplicate pts in areas of)
+#
+shp <- st_read("D:/2024_HarborSeal_Aerial_Survey/GIS/allBoundaries.shp")
+spdf <- dfo %>%
+  dplyr::select(-Id) %>%
+  st_as_sf(coords = c("longitude", "latitude"), remove = F, crs = st_crs(4326))
+df <- spdf %>%
+  st_join(shp) %>%
+  as.data.frame() %>% dplyr::select(-geometry) %>%
+  mutate(
+    section = paste(island, division, sep = "_")
+  )
 
-# Visual check of image log
-dfo %>%
+#
+## Save metadata file for image set
+#
+write.csv(df, './metaData/July15_SMI_metadata.csv', row.names = F)
+
+#
+## Visual check of image log
+#
+df %>%
   mutate(
     color = factor(breakId, labels = RColorBrewer::brewer.pal(length(unique(breakId)), "YlOrRd"))
   ) %>%
@@ -101,6 +119,28 @@ dfo %>%
     circle_radius = 3,
     popup = "Break ID: {{breakId}} <br> {{SourceFile}}"
   )
+
+df %>%
+  mutate(
+    color = factor(section, labels = viridis::viridis(length(unique(section)), option = "G")),
+    color = gsub("FF", "", color)
+  ) %>%
+  as_mapbox_source(lng = "longitude", lat = "latitude") %>%
+  # Setup a map with the default source above
+  mapboxer(
+    center = c(md$Longitude[1], md$Latitude[1]),
+    zoom = 10
+  ) %>%
+  # Add a navigation control
+  add_navigation_control() %>%
+  # Add a layer styling the data of the default source
+  add_circle_layer(
+    circle_color = c("get", "color"),
+    circle_radius = 3,
+    popup = "Break ID: {{section}} <br> {{SourceFile}}"
+  )
+
+
 
 
 #
