@@ -2,6 +2,9 @@ pkgs <- c("tidyverse", "future", "furrr", "lubridate", "sf", "glue",
           "exifr", 'geosphere', "mapboxer", "calcurR")
 sapply(pkgs, require, character = T)
 
+####
+#### Add site information to the exif data
+####
 # Assign number of cores to be used in parallel jobs
 # Includes reading exif, adding exif data, and copying image files
 future::plan("multisession", workers = 4)
@@ -97,6 +100,7 @@ df <- spdf %>%
 ## Save metadata file for image set
 #
 write.csv(df, './metaData/July15_SMI_metadata.csv', row.names = F)
+# df <- read.csv("./metaData/July15_SMI_metadata.csv")
 
 #
 ## Visual check of image log
