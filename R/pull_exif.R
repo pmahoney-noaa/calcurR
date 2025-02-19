@@ -12,7 +12,7 @@ pull_exif <- function(images) {
     extract(FileName, "frame_count") %>%
     mutate(
       frame_count = as.numeric(gsub("DSC", "", frame_count)),
-      file_date = ymd_hms(CreateDate)
+      file_date = ymd_hms(paste0(CreateDate, OffsetTime))
     ) %>%
     dplyr::select(
       frame_count, ShutterCount, SourceFile, FileModifyDate, FileType, FileTypeExtension,
