@@ -71,7 +71,10 @@ dfo <- check_aerial_merge(mdo, merge_tim_delta, seq_tim_delta, seq_dist_delta)
 #
 ## Write to exif
 #
+
+# ------ Only run if you need the location data in exif for 3rd Party software
 # write_exif(dfo)
+# ------
 
 #
 ## Image sets by break
