@@ -8,7 +8,7 @@
 #'
 #' @examples
 
-merge_log_exif <- function(md, exif) {
+merge_log_exif <- function(md, exif, by_seq = TRUE) {
 
   if (all(c("Latitude", "Longitude") %in% names(md))) {
     mdo <- md %>%
@@ -26,20 +26,43 @@ merge_log_exif <- function(md, exif) {
       )
   }
 
-  mdo <- mdo %>%
-    dplyr::inner_join(exif, by = "frame_count") %>%
-    mutate(
-      # Ideally, this would be the variable utc_time, but problematic for some files
-      capture_date = mdy_hms(paste(date.y, UTC.time)), #ymd_hms(utc_time),
+  if(by_seq) {
+    mdo <- mdo %>%
+      mutate(
+        # Ideally, this would be the variable utc_time, but problematic for some files
+        capture_date = mdy_hms(paste(date.y, UTC.time)), #ymd_hms(utc_time),
+      ) %>%
+      filter(!is.na(capture_date)) %>%
+      dplyr::inner_join(exif, by = "frame_count") %>%
+      mutate(
+        # Difference (in secs) between survey capture_date (and time) and file_date (and time)
+        merge_diff_sec = as.numeric(abs(capture_date - file_date)),
 
-      # Difference (in secs) between survey capture_date (and time) and file_date (and time)
-      merge_diff_sec = as.numeric(abs(capture_date - file_date)),
+        lat1 = c(NA, latitude[-length(latitude)]), long1 = c(NA, longitude[-length(longitude)]),
+        lat2 = latitude, long2 = longitude,
+        seq_diff_sec = c(NA, as.numeric(diff(capture_date))),
+        seq_dist_m = geosphere::distHaversine(cbind(long1, lat1), cbind(long2, lat2))
+      )
+  } else {
+    mdo <- mdo %>%
+      mutate(
+        # Ideally, this would be the variable utc_time, but problematic for some files
+        capture_date = mdy_hms(paste(date.y, UTC.time)), #ymd_hms(utc_time),
+      ) %>%
+      filter(!is.na(capture_date)) %>%
+      dplyr::inner_join(exif, by = c("capture_date" = "file_date"), keep = T) %>%
+      mutate(
+        # Difference (in secs) between survey capture_date (and time) and file_date (and time)
+        merge_diff_sec = as.numeric(abs(capture_date - file_date)),
 
-      lat1 = c(NA, latitude[-length(latitude)]), long1 = c(NA, longitude[-length(longitude)]),
-      lat2 = latitude, long2 = longitude,
-      seq_diff_sec = c(NA, as.numeric(diff(capture_date))),
-      seq_dist_m = geosphere::distHaversine(cbind(long1, lat1), cbind(long2, lat2))
-    )
+        lat1 = c(NA, latitude[-length(latitude)]), long1 = c(NA, longitude[-length(longitude)]),
+        lat2 = latitude, long2 = longitude,
+        seq_diff_sec = c(NA, as.numeric(diff(capture_date))),
+        seq_dist_m = geosphere::distHaversine(cbind(long1, lat1), cbind(long2, lat2))
+      )
+  }
+
+
 
   seq_bear_deg <- mdo %>%
     slice(-1) %>%
