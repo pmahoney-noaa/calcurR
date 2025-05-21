@@ -1,5 +1,5 @@
 pkgs <- c("tidyverse", "future", "furrr", "lubridate", "sf", "glue",
-          "exifr", 'geosphere', "mapboxer", "calcurR")
+          "exifr", 'geosphere', "mapboxer", "nngeo", "centerline", "calcurR")
 sapply(pkgs, require, character = T)
 
 ####
@@ -10,10 +10,11 @@ sapply(pkgs, require, character = T)
 future::plan("multisession", workers = 6)
 
 # Set working directory
-setwd("E:/2024_HarborSeal_Aerial_Survey/")
+wd <- "D:/2024_HarborSeal_Aerial_Survey/"
+setwd(wd)
 
 # Metadata
-md <- read.csv('./metaData/June14_VSFB_ES_SouthBay_photolog_v2.csv')
+md <- read.csv('./metaData/20240517_ANA_photolog.csv')
 
 if ("new_frame_count" %in% names(md)) {
   md <- md %>% mutate(frame_count = new_frame_count)
@@ -21,6 +22,10 @@ if ("new_frame_count" %in% names(md)) {
 
 # Visual check of track log
 # md %>%
+#   mutate(
+#     date = as.character(date.y),
+#     PDT = as.character(Pacific.time)
+#   ) %>%
 #   as_mapbox_source(lng = "Longitude", lat = "Latitude") %>%
 #   # Setup a map with the default source above
 #   mapboxer(
@@ -33,18 +38,20 @@ if ("new_frame_count" %in% names(md)) {
 #   add_circle_layer(
 #     circle_color = "white",
 #     circle_radius = 3,
+#     popup = "FC: {{frame_count}}, NFC: {{new_frame_count}} <br> Date: {{date}} <br> Time: {{PDT}}"
 #   )
 
 
+
 # Images
-idir <- "./imagery/6.14 Vandenberg-ElkhornSlough-SouthBay/"
-imgs <- list.files(idir, ".JPG$")
+idir <- paste0(wd, "imagery/5.17.24 ANA/")
+imgs <- list.files(idir, ".JPG$", full.names = T)
 
 
 #
 ## Compile image exif into data.frame
 #
-iexif <- pull_exif(paste0(idir, imgs))
+iexif <- pull_exif(imgs)
 # View(iexif)
 
 
@@ -117,21 +124,42 @@ df <- dfo <- dfo %>%
 
 # ------- Run only if you want to use SHP designations
 shp <- st_read("D:/2024_HarborSeal_Aerial_Survey/GIS/allBoundaries.shp")
+
 spdf <- dfo %>%
   dplyr::select(-Id) %>%
   st_as_sf(coords = c("longitude", "latitude"), remove = F, crs = st_crs(4326))
+
 df <- spdf %>%
   st_join(shp) %>%
   as.data.frame() %>% dplyr::select(-geometry) %>%
   mutate(
     section = paste(island, division, sep = "_")
   )
+
+# Sub-divide sections?
+#--- If you want to export the subsectioned shapefile...doesn't actually work right now
+# due to one section of the coast with multiple polygons
+
+# shp <- split_survey_polygons(shp, max_length = 1000, split_width = 3000, epsg = "EPSG:32611") # UTM Zone 11N
+
+#---
+shpSectioned <- split_survey_polygons(shp %>%
+                                        filter(island %in% na.omit(unique(df$island))),
+                                      max_length = 1500, split_width = 3000, epsg = "EPSG:32611") # UTM Zone 11N
+
+df <- spdf %>%
+  st_join(shpSectioned) %>%
+  as.data.frame() %>% dplyr::select(-geometry) %>%
+  mutate(
+    section = paste(island, division, subsection, sep = "_")
+  )
+table(df$section)
 # -------
 
 #
 ## Save metadata file for image set
 #
-write.csv(df, './metaData/June14_VSFB_ES_SouthBay_metadata.csv', row.names = F)
+write.csv(df, './metaData/20240517_ANA_metadata.csv', row.names = F)
 # df <- read.csv("./metaData/June14_VSFB_ES_SouthBay_metadata.csv")
 
 #
@@ -139,7 +167,7 @@ write.csv(df, './metaData/June14_VSFB_ES_SouthBay_metadata.csv', row.names = F)
 #
 
 # Spatial/temporal breaks
-dfo %>%
+df %>%
   mutate(
     color = factor(breakId, labels = viridis::viridis(length(unique(breakId)), option = "C")),
     color = gsub("FF", "", color)
@@ -162,8 +190,10 @@ dfo %>%
 # Breaks based on SHP file
 df %>%
   mutate(
-    color = factor(section, labels = viridis::viridis(length(unique(section)), option = "G")),
-    color = gsub("FF", "", color)
+    color = factor(section, labels = viridis::viridis(length(unique(section)), option = "viridis")), #, option = "G"
+    color = gsub("FF", "", color),
+    #color = if_else(section == "NA_NA", "red", color)
+    color = if_else(section == "NA_NA_NA", "red", color) # if subsectioning by shp file
   ) %>%
   as_mapbox_source(lng = "longitude", lat = "latitude") %>%
   # Setup a map with the default source above
@@ -176,8 +206,9 @@ df %>%
   # Add a layer styling the data of the default source
   add_circle_layer(
     circle_color = c("get", "color"),
+    #circle_opacity = 0.8,
     circle_radius = 3,
-    popup = "Break ID: {{section}} <br> {{SourceFile}}"
+    popup = "Break ID: {{section}} <br> Frame Count: {{frame_count}}"
   )
 
 
@@ -189,13 +220,16 @@ df %>%
 
 ## Option 1: By break
 idir2 <- gsub("^./", "", idir)
+# breakIds <- df %>% arrange(breakId) %>% pull(breakId) %>% unique()
 destNames <- paste0("./toMosaic/", idir2, "Break_", breakIds)
 lapply(destNames, function (x) dir.create(x, recursive = T))
 
-dfm <- dfo %>%
+dfm <- df %>%
   mutate(
     DestFile = paste0("./toMosaic/", idir2, "Break_", breakId, "/")
   )
+
+
 
 furrr::future_pmap(dfm %>%
                      mutate(recursive = T, copy.date = T) %>%

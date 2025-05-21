@@ -3,7 +3,7 @@ sapply(pkgs, require, character = T)
 
 
 # Captain's Logger
-clDir <- "E:/2024_PNW_data/CaptainsLogger/"
+clDir <- "F:/2024_PNW_data/CaptainsLogger/"
 #clDir <- "J:/LAN_structure_template/Data/Cetacean/VesselSurveys/CaptainsLogger/"
 clFiles <- list.files(clDir, "*.csv$", recursive = T, full.names = T)
 df1 <- map_dfr(1:length(clFiles), function(x) {
@@ -20,7 +20,7 @@ clDF <- df1 %>%
 
 # Garmin
 #garDir <- "J:/LAN_structure_template/Data/Cetacean/VesselSurveys/Garmin/"
-garDir <- "E:/2024_PNW_data/Garmin/"
+garDir <- "F:/2024_PNW_data/Garmin/"
 garFiles <- list.files(garDir, "*.GPX$", recursive = T, full.names = T)
 
 df <- map_dfr(1:length(garFiles), function(x) {
@@ -81,8 +81,8 @@ oLines <- oPts %>%
             .group = "keep") %>%
   st_cast("MULTILINESTRING")
 
-st_write(oPts, "C:/Users/peter.mahoney/Desktop/TrackLines/TrackPoints_2024.shp")
-st_write(oLines, "C:/Users/peter.mahoney/Desktop/TrackLines/TrackLines_2024.shp")
+# st_write(oPts, "C:/Users/peter.mahoney/Desktop/TrackLines/TrackPoints_2024.shp")
+# st_write(oLines, "C:/Users/peter.mahoney/Desktop/TrackLines/TrackLines_2024.shp")
 
 #st_write(oPts, "C:/Users/peter.mahoney/Desktop/ForKurt_BOEM/NOAA_MML_CalCurr_SurveyTrack_points.shp")
 #st_write(oLines, "C:/Users/peter.mahoney/Desktop/ForKurt_BOEM/NOAA_MML_CalCurr_SurveyTrack_lines.shp")
@@ -189,18 +189,18 @@ plot_mapbox(x = ~Longitude, y = ~Latitude,
             mode = "markers",
             colors = c("#99009c", "#e06919")) %>%
 
-  plotly::add_paths(
-    data = group_by(as.data.frame(spDF2023), surveyd),
-    x = ~Longitude, y = ~Latitude,
-    #colors = I("red"),
-    line = list(color= "#e0a3ff", #'#96fff6',
-                opacity = 0.6,
-                dash='dashed',
-                width = 0.6),
-    #text = ~dateTime,
-    #hoverinfo = "none",
-    #showlegend = F
-  ) %>%
+  # plotly::add_paths(
+  #   data = group_by(as.data.frame(spDF2023), surveyd),
+  #   x = ~Longitude, y = ~Latitude,
+  #   #colors = I("red"),
+  #   line = list(color= "#e0a3ff", #'#96fff6',
+  #               opacity = 0.6,
+  #               dash='dashed',
+  #               width = 0.6),
+  #   #text = ~dateTime,
+  #   #hoverinfo = "none",
+  #   #showlegend = F
+  # ) %>%
 
   plotly::add_paths(
     data = group_by(as.data.frame(spDF), survey),
