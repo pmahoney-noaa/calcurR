@@ -52,11 +52,16 @@ def list_files_in_directory(directory_path, full_path_name = True):
                 files.append(entry)
     return files
 
-def tile_image(image_path, tile_width, tile_height, quiet = False, output_dir = None):
+def tile_image(image_path, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = None):
     im = Image.open(image_path)
     im_width, im_height = im.size
     name, ext = os.path.splitext(image_path)
     name = os.path.basename(name)
+    
+    # Convert to JPG
+    if convert_to_jpg:
+      ext = ".jpg"
+      im = im.convert("RGB")
     
     # Output directory
     if output_dir is not None:
