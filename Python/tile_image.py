@@ -24,7 +24,7 @@ files = list_files_in_directory(image_dir)
 for fi in files:
     new_path = os.path.splitext(fi)[0]
     #os.makedirs(new_path, exist_ok = True)
-    tile_image(fi, tile_width, tile_height, quiet = False, output_dir = new_path)
+    tile_image(fi, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = new_path)
 
 
 
@@ -61,6 +61,7 @@ def tile_image(image_path, tile_width, tile_height, convert_to_jpg = True, quiet
     # Convert to JPG
     if convert_to_jpg:
       ext = ".jpg"
+      print("Converting " + ext + " to JPG.")
       im = im.convert("RGB")
     
     # Output directory
