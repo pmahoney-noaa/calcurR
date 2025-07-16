@@ -12,7 +12,7 @@ df1 <- map_dfr(1:length(clFiles), function(x) {
 
 clDF <- df1 %>%
   mutate(dateTime_GMT =  lubridate::mdy_hms(str_sub(df1$DateTime_GMT, start = 1, end = -4), tz = "GMT"),
-         dateTime_local = lubridate::with_tz(dateTime_GMT, "Etc/GMT+7"),
+         dateTime_local = lubridate::with_tz(dateTime_GMT, "Etc/GMT-7"),
          source = "IMU Logger") %>%
   filter(!is.na(dateTime_GMT) & Longitude < 0) %>%
   filter(lubridate::year(dateTime_GMT) < 2029) #%>%
@@ -31,8 +31,8 @@ garDF <- df %>%
   filter(!duplicated(.)) %>%
   mutate(source = "Garmin Chartplotter",
          dateTime_GMT = lubridate::ymd_hms(time, tz = "GMT"),
-         dateTime_local = lubridate::with_tz(dateTime_GMT, tz = "Etc/GMT+7")) %>%
-         # dateTime_local = lubridate::ymd_hms(time, tz = "Etc/GMT+7"),
+         dateTime_local = lubridate::with_tz(dateTime_GMT, tz = "Etc/GMT-7")) %>%
+         # dateTime_local = lubridate::ymd_hms(time, tz = "Etc/GMT-7"),
          # dateTime_GMT = lubridate::with_tz(dateTime_local, tz = "GMT")) %>%
   filter(!is.na(dateTime_local) & lubridate::year(dateTime_local) > 2021) %>%
   arrange(dateTime_local) %>%

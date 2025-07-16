@@ -47,7 +47,8 @@ dbGetQuery(conn, "SELECT * FROM Images")           # Album, name, modDate, size
 dbGetQuery(conn, "SELECT * FROM Tags")             # tag id, pid, name
 
 # Build query to pull for ID
-spp <- "Gray Whale"
+#spp <- "Gray Whale"
+spp <- "Humpback Whale"
 
 # Parent ID for gray whales
 pid <- dbGetQuery(conn, "SELECT id, name FROM Tags
@@ -142,9 +143,12 @@ gpxo <- gpx %>%
   filter(!is.na(time)) %>%
   mutate(
     Longitude = st_coordinates(.)[,1],
-    Latitude = st_coordinates(.)[,2]
+    Latitude = st_coordinates(.)[,2],
+    source = "Garmin Chartplotter",
+    dateTime_GMT = lubridate::ymd_hms(time, tz = "GMT"),
+    dateTime_local = lubridate::with_tz(dateTime_GMT, tz = "Etc/GMT+7")
   ) %>%
-  dplyr::select(DateTime_Local = time, Longitude, Latitude) %>%
+  dplyr::select(DateTime_Local = dateTime_local, Longitude, Latitude) %>%
   as.data.frame() %>% dplyr::select(-geometry) %>%
   filter(!duplicated(.))
 
@@ -190,7 +194,7 @@ io <- io %>%
 ### Copy into daily folders and add location EXIF
 ##
 
-destDir <- "D:/2024_Er_MML/Originals"
+destDir <- "D:/2024_Mn_MML/"
 dir.create(destDir, recursive = T)
 
 dirs <- io %>%
@@ -213,7 +217,13 @@ dest <- io %>%
   ) %>%
   dplyr::select(-specificPath, -relativePath)
 
-file.copy(dest$localName, dest$destName, copy.date = TRUE)
+#file.copy(dest$localName, dest$destName, copy.date = TRUE)
+future::plan("multisession", workers = 4)
+furrr::future_pmap(dest %>%
+                     mutate(recursive = T, copy.date = T) %>%
+                     dplyr::select(from = localName, to = destName, recursive, copy.date),
+                   file.copy,
+                   .progress = T)
 
 # # Add location to EXIF (if doesn't exist)
 # write_exif <- function(df) {
@@ -279,7 +289,8 @@ dfn <- read.csv("F:/2024_PNW_data/MMVS_Observations_2024-10-15-03-19-23.csv") %>
     startFrame = NA, endFrame = NA
   ) %>%
   filter(
-    Species. == "Gray Whale" & lubridate::date(dateTime_GMT) %in% dates
+    #Species. == "Gray Whale" & lubridate::date(dateTime_GMT) %in% dates
+    Species. == "Humpback Whale" & lubridate::date(dateTime_GMT) %in% dates
   ) %>%
   dplyr::select(
     Species = Species.,
@@ -291,9 +302,9 @@ dfn <- read.csv("F:/2024_PNW_data/MMVS_Observations_2024-10-15-03-19-23.csv") %>
     Longitude = X_Record.your.current.location_longitude,
     Comments = Observations.Observation.Comments.Comments,
     mindex = X_index
-  ) %>%
-  left_join(ff, by = "mindex") #%>%
-#left_join(fs, by = "mindex")
+  ) #%>%
+  #left_join(ff, by = "mindex") #%>%
+  #left_join(fs, by = "mindex")
 
 dfn <- dfn %>%
   mutate(
@@ -305,4 +316,5 @@ dfn <- dfn %>%
 
 dfo <- dfn
 #dfo <- rbind(df, dfn)
-write.csv(dfo, "F:/2024_MML_Er_Observations.csv")
+#write.csv(dfo, "F:/2024_MML_Er_Observations.csv")
+write.csv(dfo, "F:/2024_MML_Mn_Observations.csv")

@@ -82,3 +82,11 @@ mml <- summ %>%
     mnUIDs = mean(uIDs),
     mnUUIDs = mean(uuIDs)
   )
+
+swfsc <- summ %>%
+  filter(ResearchGroup %in% "SWFSC" & Year >= 2010) %>%
+  summarize(
+    nEnc = sum(nEnc),
+    mnUIDs = mean(uIDs),
+    mnUUIDs = mean(uuIDs)
+  )
