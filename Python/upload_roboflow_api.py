@@ -53,7 +53,13 @@ image_dir = "D:/2024_HarborSealMosaics/20240519_SanNicolas/"
 files = list_files_in_directory(image_dir, full_path_name = True)
 
 # Upload the image to your project
-for fi in files:
-  project.upload(fi)
+for fi in files[1067:len(files)]:
+  print("Uploading image tile: " + fi)
+  project.upload(
+    fi, 
+    batch_name = "20240519_SanNicolas",
+    num_retry_uploads=10
+    )
+
 
 
