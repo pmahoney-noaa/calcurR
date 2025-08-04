@@ -10,15 +10,15 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Import image
 #image_path = imPath = "D:/2024_HarborSeal_Aerial_Survey/mosaics/20240614_Vandenberg-ElkhornSlough-SouthBay/20240614_break8.tif"
-image_path = imPath = "F:/2024_HarborSealMosaics/20240519_SanNicolas/20240519_SNI_A1_chunk1.tif"
-im = Image.open(imPath)
-pixels = np.asarray(im)
-pixels.shape
+#image_path = imPath = "F:/2024_HarborSealMosaics/20240519_SanNicolas/20240519_SNI_A1_chunk1.tif"
+#im = Image.open(imPath)
+#pixels = np.asarray(im)
+#pixels.shape
 
 tile_height = 3168
 tile_width = 4752
 
-image_dir = "F:/2024_HarborSealMosaics/20240519_SanNicolas/"
+image_dir = "F:/2024_HarborSealMosaics/20240517_ANA/"
 files = list_files_in_directory(image_dir)
 
 for fi in files:
@@ -146,7 +146,3 @@ def tile_image(image_path, tile_width, tile_height, convert_to_jpg = True, quiet
 #       outp_path = os.path.join(out_dir, outp_path)
 #       outp.save(outp_path)
 #       n += 1
-
-            
-
-
