@@ -49,15 +49,15 @@ projectId = 'seals-lgx79'
 project = rf.workspace(workspaceId).project(projectId)
 
 # Find files to upload
-image_dir = "D:/2024_HarborSealMosaics/20240519_SanNicolas/"
+image_dir = "D:/2024_HarborSealMosaics/20240517_ANA/"
 files = list_files_in_directory(image_dir, full_path_name = True)
 
 # Upload the image to your project
-for fi in files[1067:len(files)]:
+for fi in files:
   print("Uploading image tile: " + fi)
   project.upload(
     fi, 
-    batch_name = "20240519_SanNicolas",
+    batch_name = "20240517_ANA",
     num_retry_uploads=10
     )
 
