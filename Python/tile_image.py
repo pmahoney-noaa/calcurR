@@ -18,13 +18,13 @@ Image.MAX_IMAGE_PIXELS = None
 tile_height = 3168
 tile_width = 4752
 
-image_dir = "D:/20240521_SanMiguel/"
+image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SantaRosa"
 files = list_files_in_directory(image_dir)
 
 for fi in files:
     new_path = os.path.splitext(fi)[0]
     #os.makedirs(new_path, exist_ok = True)
-    tile_image(fi, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = new_path)
+    tile_mosaic(fi, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = new_path)
 
 
 
@@ -52,7 +52,7 @@ def list_files_in_directory(directory_path, full_path_name = True):
                 files.append(entry)
     return files
 
-def tile_image(image_path, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = None):
+def tile_mosaic(image_path, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = None):
     im = Image.open(image_path)
     im_width, im_height = im.size
     name, ext = os.path.splitext(image_path)
@@ -97,52 +97,3 @@ def tile_image(image_path, tile_width, tile_height, convert_to_jpg = True, quiet
                     print("Pixel coordinates: " + str(box))
                 outp.save(outp_path)
                 n += 1
-
-# tile_image(image_path, tile_width, tile_height, quiet = False, output_dir = output_dir)
-
-# def tile_image_parallel(image_path, tile_width, tile_height, quiet = False, output_dir = None):
-#     im = Image.open(image_path)
-#     im_width, im_height = im.size
-#     name, ext = os.path.splitext(image_path)
-#     name = os.path.basename(name)
-#     
-#     # Output directory
-#     if output_dir != None:
-#         out_dir = output_dir + "tiles_" + str(tile_height) + "/"
-#         if not os.path.exists(out_dir):
-#             os.makedirs(out_dir)
-#     else:
-#         out_dir = "./tiles_" + str(tile_height) + "/"
-#     
-#     # Tiling breaks    
-#     ncols = math.ceil(im_width / tile_width)
-#     nrows = math.ceil(im_height / tile_height)
-#     
-#     # Extents for cropping
-#     boxes = []
-#     n = 0
-#     for i in range(0, nrows):
-#         for j in range(0, ncols):
-#             # Extent for crop
-#             box = (j * tile_width, i * tile_height, j * tile_width +
-#                    tile_width, i * tile_height + tile_height)
-#             boxes.append(box) 
-# 
-#     # Run tiling
-#     n = 0
-#     with Pool(4) as p:
-#       return p.map(tile_image, boxes)
-#     
-# 
-#             
-# def tile_image_simple(image, box, out_dir, n):
-#   # Crop image
-#   outi = image.crob(box)
-#   
-#   # If not all black or white, export and increment
-#   extr = outi.convert("L").getextrema()
-#   if not (extr == (0, 0) or extr == (1, 1)):
-#       outp_path = name + "_tile_" + str(n) + ext
-#       outp_path = os.path.join(out_dir, outp_path)
-#       outp.save(outp_path)
-#       n += 1
