@@ -1,7 +1,7 @@
 # To run in R if required
 # library(reticulate)
-# py_require("dotenv")
-# py_require("roboflow")
+# reticulate::py_require("dotenv")
+# reticulate::py_require("roboflow")
 
 from roboflow import Roboflow
 from dotenv import load_dotenv
@@ -32,6 +32,7 @@ def list_files_in_directory(directory_path, full_path_name = True):
                 files.append(image)
     return files
 
+
 # Load API key
 load_dotenv()  # Load variables from .env file
 api_key = os.getenv("ROBOFLOW_API_KEY")
@@ -49,7 +50,7 @@ projectId = 'seals-lgx79'
 project = rf.workspace(workspaceId).project(projectId)
 
 # Find files to upload
-image_dir = "D:/2024_HarborSealMosaics/20240517_ANA/"
+image_dir = "D:/20240521_SanMiguel/"
 files = list_files_in_directory(image_dir, full_path_name = True)
 
 # Upload the image to your project
@@ -57,7 +58,7 @@ for fi in files:
   print("Uploading image tile: " + fi)
   project.upload(
     fi, 
-    batch_name = "20240517_ANA",
+    batch_name = "20240521_SanMiguel_Part1",
     num_retry_uploads=10
     )
 
