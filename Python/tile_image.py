@@ -18,7 +18,7 @@ Image.MAX_IMAGE_PIXELS = None
 tile_height = 3168
 tile_width = 4752
 
-image_dir = "F:/2024_HarborSealMosaics/20240517_ANA/"
+image_dir = "D:/20240521_SanMiguel/"
 files = list_files_in_directory(image_dir)
 
 for fi in files:
@@ -60,8 +60,8 @@ def tile_image(image_path, tile_width, tile_height, convert_to_jpg = True, quiet
     
     # Convert to JPG
     if convert_to_jpg:
-      ext = ".jpg"
       print("Converting " + ext + " to JPG.")
+      ext = ".jpg"
       im = im.convert("RGB")
     
     # Output directory
