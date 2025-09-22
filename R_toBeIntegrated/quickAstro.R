@@ -9,15 +9,20 @@ full <- map_dfr(1:length(files), function(x) {
     mutate(
       flight = x,
       dateTime = as.POSIXct((Unix.Time..ms. / 1000), tz = "America/Los_Angeles")
-      ) %>%
+    ) %>%
     group_by(flight) %>%
     summarize(
-      startTime = dateTime[1], DurationMin = as.numeric(dateTime[n()] - dateTime[1]),
-      latitude = Latitude[1], longitude = Longitude[1]
+      startTime = dateTime[1],
+      DurationMin = as.numeric(dateTime[n()] - dateTime[1]),
+      latitude = Latitude[1],
+      longitude = Longitude[1]
     ) %>%
     mutate(
       #gmt = lubridate::with_tz(startTime, tzone = "GMT"),
-      PIC = "PJM", VO = "JH", MC = "TO", Instructor = "",
+      PIC = "PJM",
+      VO = "JH",
+      MC = "TO",
+      Instructor = "",
       Date = format(startTime, "%m/%d/%Y"),
       Time = format(startTime, "%H:%M:%S"),
       Year = lubridate::year(startTime),
@@ -27,12 +32,22 @@ full <- map_dfr(1:length(files), function(x) {
       FAA = "FA3TP7RE9M",
       FlownFrom = "BOAT"
     ) %>%
-    select(Flight = flight, PIC, VO, MC, Instructor,
-           Date, Year, Time, NumLandings, DurationMin,
-           NIF_no, SN, FAA, FlownFrom)
+    select(
+      Flight = flight,
+      PIC,
+      VO,
+      MC,
+      Instructor,
+      Date,
+      Year,
+      Time,
+      NumLandings,
+      DurationMin,
+      NIF_no,
+      SN,
+      FAA,
+      FlownFrom
+    )
 })
 
 write.csv(full, "C:/Users/peter.mahoney/Desktop/AstroLogs.csv", row.names = F)
-
-#UID	PIC VO (SIC)	MC	Instructor (serving as PIC)	Date	year	Start_GMT	Number of Landings	Duration_min	NIF_no	S/N of Platform	FAA Registration #	Flown from
-

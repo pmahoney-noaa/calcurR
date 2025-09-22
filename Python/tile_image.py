@@ -20,17 +20,16 @@ tile_width = 4752
 
 image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SantaRosa"
 image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SanClemente"
+image_dir = "D:/20240521_SantaCruz/"
 files = list_files_in_directory(image_dir)
 
-for fi in files:
+#for fi in files:
+for fi in files[28:len(files)]: 
     new_path = os.path.splitext(fi)[0]
     #os.makedirs(new_path, exist_ok = True)
-    #tile_mosaic(fi, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = new_path)
-    tile_image(fi, tile_width, tile_height, convert_to_jpg = False, quiet = False, output_dir = new_path)
-
-
-
-
+    tile_mosaic(fi, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = new_path)
+    #tile_image(fi, tile_width, tile_height, convert_to_jpg = False, quiet = False, output_dir = new_path)
+# D:/20240521_SantaCruz/20240521_CRUZ_643_8_chunk2_hdr.tif failed
 
 
 def list_files_in_directory(directory_path, full_path_name = True):
