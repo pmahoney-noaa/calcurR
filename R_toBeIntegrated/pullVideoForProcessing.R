@@ -26,6 +26,7 @@ dbGetQuery(conn, "SELECT * FROM AlbumRoots") # Root directory
 dbGetQuery(conn, "SELECT * FROM Albums") # Album Info
 dbGetQuery(conn, "SELECT * FROM ImageInformation") # Rating, format, times, Height, width, orientation
 dbGetQuery(conn, "SELECT * FROM ImageMetadata") # Camera make, model, lens, settings
+dbGetQuery(conn, "SELECT * FROM VideoMetadata") # Camera make, model, lens, settings
 dbGetQuery(conn, "SELECT * FROM ImagePositions") # Lat, long, alt
 dbGetQuery(conn, "SELECT * FROM ImageTags") # Image tagid (numeric), long format
 dbGetQuery(conn, "SELECT * FROM Images") # Album, name, modDate, size
@@ -73,11 +74,13 @@ imgs <- dbGetQuery(
   "SELECT Images.id, Images.name,
                           ImageInformation.creationDate, ImageInformation.format,
                           ImageMetadata.model, ImageMetadata.lens, ImageMetadata.aperture, ImageMetadata.focalLength35, ImageMetadata.exposureTime, ImageMetadata.sensitivity,
+                          VideoMetadata.aspectRatio, VideoMetadata.duration, VideoMetadata.frameRate, VideoMetadata.videoCodec,
                           ImagePositions.latitudeNumber, ImagePositions.longitudeNumber, ImagePositions.altitude,
-                          Images.album, AlbumRoots.specificPath, Albums.relativePath
+                          Images.album, AlbumRoots.specificPath, Albums.relativePath, Images.fileSize
                   FROM Images
                   LEFT OUTER JOIN ImageInformation ON Images.id = ImageInformation.imageid
                   LEFT OUTER JOIN ImageMetadata ON Images.id = ImageMetadata.imageid
+                  LEFT OUTER JOIN VideoMetadata ON Images.id = VideoMetadata.imageid
                   LEFT OUTER JOIN ImagePositions ON Images.id = ImagePositions.imageid
                   LEFT OUTER JOIN Albums ON Images.album = Albums.id
                   LEFT OUTER JOIN AlbumRoots ON Albums.albumRoot = AlbumRoots.id"
@@ -95,7 +98,7 @@ imgTags <- dbGetQuery(
 
 
 # Subset images for submission
-startDate <- lubridate::ymd_hms("2024-08-01 00:00:00")
+startDate <- lubridate::ymd_hms("2024-06-01 00:00:00")
 endDate <- lubridate::ymd_hms("2024-10-01 00:00:00")
 io <- imgs %>%
   mutate(
@@ -103,10 +106,38 @@ io <- imgs %>%
   ) %>%
   left_join(imgTags, by = join_by(id == imageid)) %>%
   filter(
-    id %in% iid & dateTime >= startDate & dateTime <= endDate
+    #id %in% iid & # Filter out specific group/tag
+    dateTime >= startDate & dateTime <= endDate
   ) %>%
   filter(!is.na(specificPath))
 
+# Video summary
+(vidSumm <- io %>%
+  filter(!is.na(duration)) %>%
+  mutate(
+    month = month(ymd_hms(creationDate)),
+    year = year(ymd_hms(creationDate))
+  ) %>%
+  group_by(month) %>%
+  dplyr::summarize(
+    totalVids = n(),
+    totalDuration_min = (sum(as.numeric(duration)) / 1000) / 60,
+    totalSize_gb = sum(as.numeric(fileSize) / 1E9)
+  ))
+
+# Volume summary
+(datSumm <- io %>%
+  mutate(
+    month = month(ymd_hms(creationDate)),
+    year = year(ymd_hms(creationDate))
+  ) %>%
+  group_by(year, month) %>%
+  dplyr::summarize(
+    totalImages = sum(is.na(duration)),
+    totalVideos = sum(!is.na(duration)),
+    totalImagery = n(),
+    totalSize_gb = sum(as.numeric(fileSize) / 1E9)
+  ))
 
 ##
 ### Copy into daily folders and add location EXIF
