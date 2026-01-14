@@ -2,9 +2,15 @@ pkgs <- c("tidyverse", "sf", 'purrr', 'plotly')
 sapply(pkgs, require, character = T)
 
 
+###
+## See imagesToCRC for updated code
+###
+
 # Captain's Logger
-clDir <- "D:/2025_PNW_data/CaptainsLogger/"
 #clDir <- "J:/LAN_structure_template/Data/Cetacean/VesselSurveys/CaptainsLogger/"
+clDir <- "G:/2023_PNW_data/CaptainsLogger/"
+#clDir <- "F:/2024_PNW_data/CaptainsLogger/"
+#clDir <- "D:/2025_PNW_data/CaptainsLogger/"
 clFiles <- list.files(clDir, "*.csv$", recursive = T, full.names = T)
 df1 <- map_dfr(1:length(clFiles), function(x) {
   read.csv(clFiles[x]) %>% mutate(survey = x)
@@ -25,7 +31,9 @@ clDF <- df1 %>%
 
 # Garmin
 #garDir <- "J:/LAN_structure_template/Data/Cetacean/VesselSurveys/Garmin/"
-garDir <- "D:/2025_PNW_data/Garmin/"
+garDir <- "G:/2023_PNW_data/Garmin/"
+#garDir <- "F:/2024_PNW_data/Garmin/"
+#garDir <- "D:/2025_PNW_data/Garmin/"
 garFiles <- list.files(garDir, "*.GPX$", recursive = T, full.names = T)
 
 df <- map_dfr(1:length(garFiles), function(x) {
@@ -41,7 +49,7 @@ garDF <- df %>%
     dateTime_local = lubridate::ymd_hms(time, tz = "Etc/GMT+7"),
     dateTime_GMT = lubridate::with_tz(dateTime_local, tz = "GMT")
   ) %>%
-  filter(!is.na(dateTime_local) & lubridate::year(dateTime_local) >= 2025) %>%
+  filter(!is.na(dateTime_local) & lubridate::year(dateTime_local) >= 2022) %>%
   arrange(dateTime_local) %>%
   dplyr::select(
     time,
@@ -106,11 +114,25 @@ oDF2 <- oDF %>%
       (!grepl("Garmin", source) & as.character(Date) %in% clDates[ind])
   ) %>%
   filter(longitude < -123.5) %>%
-  arrange(datetime_local) %>%
-  mutate(survey = as.numeric(factor(Date))) %>%
-  rename(surveyid = survey) %>%
-  dplyr::select(-Date) %>%
-  filter(lubridate::year(datetime_gmt) > 2023)
+  arrange(datetime_local, survey) %>%
+  filter(!duplicated(datetime_local)) %>%
+  mutate(
+    tdiff = c(0, diff(datetime_local)) / 3600,
+    breaks = if_else(tdiff > 2, 1, 0),
+    survey_num = cumsum(breaks),
+    surveyid = paste(year(datetime_local), survey_num, sep = "_")
+  ) %>%
+  #mutate(surveyid = paste(Date, survey, sep = "_")) %>%
+  #mutate(survey = as.numeric(factor(Date))) %>%
+  #rename(surveyid = survey) %>%
+  dplyr::select(
+    surveyid,
+    source,
+    datetime_gmt,
+    datetime_local,
+    longitude,
+    latitude
+  )
 
 # View(oDF2 %>%
 #   mutate(Date = as.Date(datetime_local)) %>%
@@ -130,8 +152,8 @@ oLines <- oPts %>%
   ) %>%
   st_cast("MULTILINESTRING")
 
-# st_write(oPts, "C:/Users/peter.mahoney/Desktop/TrackLines/TrackPoints_2024.shp")
-# st_write(oLines, "C:/Users/peter.mahoney/Desktop/TrackLines/TrackLines_2024.shp")
+# st_write(oPts, "./Data/SHP/TrackPoints_2025.shp", delete_dsn = T)
+# st_write(oLines, "./Data/SHP/TrackLines_2025.shp", delete_dsn = T)
 
 #st_write(oPts, "C:/Users/peter.mahoney/Desktop/ForKurt_BOEM/NOAA_MML_CalCurr_SurveyTrack_points.shp")
 #st_write(oLines, "C:/Users/peter.mahoney/Desktop/ForKurt_BOEM/NOAA_MML_CalCurr_SurveyTrack_lines.shp")
@@ -527,8 +549,9 @@ mmDF <- read.csv(
 mmDF %>% filter(AID == 1) %>% pull(count) %>% sum()
 mmDF %>% filter(BIC == 1) %>% pull(count) %>% sum()
 
+
 mmDF <- read.csv(
-  "D:/2025_PNW_data/MMS_Observations_2025-08-27-20-02-21.csv"
+  "D:/2025_PNW_data/MMS_Observations_2025-11-12-03-42-44.csv"
 ) %>%
   dplyr::select(
     dateTime = Sightings.New.Sighting.Observation.time,
@@ -549,6 +572,50 @@ summ <- mmDF %>%
     Ncnt = sum(count),
     Nphoto = sum(photographed)
   )
+
+obsDF <- mmDF %>%
+  filter(species == "Gray Whale")
+
+# by species
+plot_mapbox(
+  x = ~Longitude,
+  y = ~Latitude,
+  mode = "markers",
+  colors = c("#99009c", "#e06919")
+) %>%
+
+  add_trace(
+    data = obsDF %>%
+      mutate(
+        species = factor(species, levels = c("Humpback Whale", "Gray Whale"))
+      ), # %>% filter(species == "Gray Whale"),
+    x = ~Longitude,
+    y = ~Latitude,
+    color = ~species,
+    marker = list(
+      #color = ~as.factor(species),
+      #colors = c("blue", "red"),
+      color = "#99009c",
+      size = ~ ifelse(count > 4, 12, 3 * count),
+      opacity = 0.6,
+      line = list(
+        color = '#ffffff',
+        width = 5
+      )
+    ),
+    text = ~ paste(species, ": N =", count),
+    hoverinfo = "text" #,
+    #showlegend = F
+  ) %>%
+
+  layout(
+    mapbox = list(
+      style = 'dark',
+      zoom = 4.75,
+      center = list(lon = -124, lat = 45.5)
+    )
+  ) %>%
+  config(mapboxAccessToken = Sys.getenv("MAPBOX_TOKEN"))
 
 # Routes
 # spDF <- df %>%

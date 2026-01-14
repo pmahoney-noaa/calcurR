@@ -18,13 +18,13 @@ Image.MAX_IMAGE_PIXELS = None
 tile_height = 3168
 tile_width = 4752
 
-image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SantaRosa"
-image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SanClemente"
-image_dir = "D:/20240521_SantaCruz/"
+#image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SantaRosa"
+#image_dir = "D:/2024_PHS_Channel_Island_Mosaics/imagery/20240520_SanClemente"
+image_dir = "E:/20240520_SanClemente"
 files = list_files_in_directory(image_dir)
 
-#for fi in files:
-for fi in files[28:len(files)]: 
+for fi in files:
+#for fi in files[28:len(files)]: 
     new_path = os.path.splitext(fi)[0]
     #os.makedirs(new_path, exist_ok = True)
     tile_mosaic(fi, tile_width, tile_height, convert_to_jpg = True, quiet = False, output_dir = new_path)
